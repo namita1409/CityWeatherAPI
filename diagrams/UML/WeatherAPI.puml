@@ -1,0 +1,128 @@
+@startuml "WeatherAPI"
+skinparam ClassAttributeIconSize 0
+
+class CityController {
+    - cityService : ICityService
+
+    + CityController(cityService : ICityService)
+
+    + GetCityList() : Task<ActionResult<IEnumerable<City>>>
+
+    + GetCityByCityName(cityName : string) : Task<ActionResult<City>>
+
+    + AddCity(city : City) : Task<ActionResult<City>>
+
+    + UpdateCity(cityName : string, city : City) : Task<ActionResult<City>>
+
+    + DeleteCity(cityName : string) : Task<IActionResult>
+}
+
+interface ICityService <<interface>> {
+    + GetAllCity() : Task<List<City>>
+
+    + GetCityByCityName(cityName : string) : Task<City>
+
+    + AddCity(city : City) : Task<City>
+
+    + UpdateCity(cityName : string, city : City) : Task<City>
+
+    + DeleteCity(cityName : string) : Task
+
+    + CityExists(cityName : string) : Task<bool>
+}
+
+class CityService {
+    - httpClientService : IHttpClientService
+    - cityContext : CityContext
+
+    + CityService(\n\
+        httpClientService : IHttpClientService,\n\
+        cityContext : CityContext)
+}
+
+class City {
+    + Id : int
+    + Name : string
+    + latitude : double
+    + longitude : double
+}
+
+class WeatherController {
+    - weatherService : IWeatherService
+    - cityService : ICityService
+
+    + WeatherController(\n\
+        weatherService : IWeatherService,\n\
+        cityService : ICityService\n\
+    )
+
+    + GetWeatherByLatLon(\n\
+        latitude : double, \n\
+        longitude : double\n\
+    ) : Task<ActionResult<Weather>>
+
+    + GetWeatherByCityName(\n\
+        cityName : string\n\
+    ) : Task<ActionResult<Weather>>
+}
+
+interface IWeatherService <<interface>> {
+    + GetWeatherByLatLon(\n\
+        latitude : double, \n\
+        longitude : double\n\
+    ) : Task<Weather>
+}
+
+class WeatherService {
+    - httpClientService : IHttpClientService
+
+    + WeatherService(\n\
+        httpClientService : IHttpClientService)
+}
+
+class Weather {
+    + Latitude : double
+    + Longitude : double
+    + WeatherCodes : WeatherCode
+    + WhatToPrepare : string
+}
+
+Enum WeatherCode {
+    ClearSky
+    Cloudy
+    Fog
+    RainOrWorse
+}
+
+interface IHttpClientService <<interface>> {
+    + GetAsync(url : string) : Task<(string, bool)>
+}
+
+class HttpClientService {
+    - httpClient : HttpClient
+	
+	+ GetAsync(url : string) : Task<(string, bool)>
+}
+
+CityController o-- ICityService
+
+ICityService <|.. CityService
+ICityService ---> City
+WeatherController ----> City
+
+WeatherController o-- IWeatherService
+WeatherController o-- ICityService
+
+IWeatherService <|.. WeatherService
+
+WeatherController ----> Weather
+IWeatherService ---> Weather
+
+Weather o-- WeatherCode
+
+CityService o-- IHttpClientService
+WeatherService o-- IHttpClientService
+
+IHttpClientService <|.. HttpClientService
+
+@enduml
